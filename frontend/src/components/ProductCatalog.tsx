@@ -28,6 +28,7 @@ const ProductCatalog: React.FC = () => {
     const [customizations, setCustomizations] = useState<Customization[]>([]);
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
+    const [showAdded, setShowAdded] = useState(false);
     const { addItem } = useCart();
     const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5053';
 
@@ -58,6 +59,8 @@ const ProductCatalog: React.FC = () => {
             const customizationsStr = JSON.stringify(selectedOptions);
             addItem(selectedProduct, customizationsStr);
             setSelectedProduct(null);
+            setShowAdded(true);
+            setTimeout(() => setShowAdded(false), 2000);
         }
     };
 
@@ -101,7 +104,9 @@ const ProductCatalog: React.FC = () => {
                                         ))}
                                         <div className="flex justify-end space-x-2">
                                             <Button variant="outline" onClick={() => setSelectedProduct(null)}>Cancelar</Button>
-                                            <Button onClick={handleConfirmCustomization}>Añadir al Carrito</Button>
+                                            <Button 
+                                            className='cursor-pointer'
+                                            onClick={handleConfirmCustomization}>Añadir al Carrito</Button>
                                         </div>
                                     </DialogContent>
                                 </Dialog>
@@ -112,6 +117,11 @@ const ProductCatalog: React.FC = () => {
                     </Card>
                 ))}
             </div>
+            {showAdded && (
+                <div className="fixed top-4 right-4 bg-green-500 text-white p-3 rounded shadow-lg animate-fade-in z-50">
+                    ¡Añadido al carrito!
+                </div>
+            )}
         </div>
     );
 };
