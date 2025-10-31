@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 const Checkout: React.FC = () => {
     const { items, total } = useCart();
     const navigate = useNavigate();
+    const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5053';
 
     const [formData, setFormData] = useState({
         customerName: '',
@@ -31,7 +32,7 @@ const Checkout: React.FC = () => {
         };
 
         try {
-            const res = await fetch('http://localhost:5053/api/orders', {
+            const res = await fetch(`${API_BASE}/api/orders`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(order),

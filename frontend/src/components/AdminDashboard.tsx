@@ -25,19 +25,20 @@ const AdminDashboard: React.FC = () => {
     const [totalOrders, setTotalOrders] = useState(0);
     const [people, setPeople] = useState(10);
     const [suggestion, setSuggestion] = useState('');
+    const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5053';
 
     useEffect(() => {
-        fetch('http://localhost:5053/api/orders')
+        fetch(`${API_BASE}/api/orders`)
             .then(res => res.json())
             .then((data: Order[]) => {
                 setOrders(data);
                 setSalesMonthly(data.reduce((sum, o) => sum + o.total, 0));
                 setTotalOrders(data.length);
             });
-    }, []);
+    }, [API_BASE]);
 
     const handleGenerate = async () => {
-        const res = await fetch('http://localhost:5053/api/llm/suggest', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({People: people}) });
+        const res = await fetch(`${API_BASE}/api/llm/suggest`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({People: people}) });
         const data = await res.text();
         setSuggestion(data);
     };
