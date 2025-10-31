@@ -22,38 +22,54 @@ const ComboSuggestion: React.FC = () => {
 
   const toggleRecording = () => {
     if (isRecording) {
-      // Stop recording
+      // Detener grabación
       setIsRecording(false);
-      // Send transcript to LLM
       if (transcript) {
         sendVoiceToLLM(transcript);
       }
     } else {
-      // Start recording
+      // Iniciar grabación
       startRecording();
     }
   };
 
   const startRecording = () => {
+    if (!(window as any).webkitSpeechRecognition) {
+      alert('Tu navegador no soporta reconocimiento de voz.');
+      return;
+    }
+
     const recognition = new (window as any).webkitSpeechRecognition();
     recognition.lang = 'es-ES';
-    recognition.continuous = true;
-    recognition.interimResults = true;
+    recognition.continuous = false;
+    recognition.interimResults = false;
 
-    recognition.onstart = () => setIsRecording(true);
-    recognition.onresult = (event: any) => {
-      let finalTranscript = '';
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript;
-        }
-      }
-      if (finalTranscript) {
-        setTranscript(finalTranscript);
-      }
+    recognition.onstart = () => {
+      setIsRecording(true);
+      setTranscript('');
     };
-    recognition.onend = () => setIsRecording(false);
-    recognition.start();
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setTranscript(transcript);
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error('Error de reconocimiento:', event.error);
+      setIsRecording(false);
+      alert('Error en reconocimiento de voz: ' + event.error);
+    };
+
+    try {
+      recognition.start();
+    } catch (error) {
+      console.error('Error al iniciar reconocimiento:', error);
+      alert('No se pudo iniciar el reconocimiento de voz.');
+    }
   };
 
   const sendVoiceToLLM = async (voiceText: string) => {
@@ -73,8 +89,11 @@ const ComboSuggestion: React.FC = () => {
         <CardTitle>Sugerencias de Combos con IA</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="mb-4">¿Cuántas personas? Nuestra IA te sugiere combos personalizados basados en tradiciones guatemaltecas.</p>
-        <div className="flex gap-2 mb-4">
+        <p className="mb-4">
+          ¿Cuántas personas? Nuestra IA te sugiere combos personalizados basados en tradiciones guatemaltecas.
+        </p>
+
+        <div className="flex gap-2 mb-4 items-center">
           <Input
             type="number"
             value={people}
@@ -83,14 +102,31 @@ const ComboSuggestion: React.FC = () => {
             min="1"
             className="w-32"
           />
-          <Button onClick={toggleRecording} variant="outline" disabled={isRecording}>
-            {isRecording ? 'Detener Grabación' : '🎤 Grabar Voz'}
+
+          {/* Botón de grabar estilo ChatGPT */}
+          <Button
+            onClick={toggleRecording}
+            className={`transition-all duration-300 flex items-center gap-2 ${
+              isRecording
+                ? 'bg-red-600 hover:bg-red-700 text-white'
+                : 'bg-gray-200 hover:bg-gray-300 text-black'
+            }`}
+          >
+            <span
+              className={`h-3 w-3 rounded-full ${
+                isRecording ? 'bg-red-500 animate-pulse' : 'bg-gray-400'
+              }`}
+            />
+            {isRecording ? 'Detener Grabación' : 'Grabar Voz'}
           </Button>
+
           <Button onClick={handleGenerate}>Generar Sugerencia</Button>
         </div>
-        {transcript && <p className="text-sm text-gray-600">Transcripción: {transcript}</p>}
+
+        {transcript && <p className="text-sm text-gray-600">🗣️ Transcripción: {transcript}</p>}
+
         {suggestion && (
-          <div className="p-4 bg-gray-50 rounded whitespace-pre-line">
+          <div className="p-4 bg-gray-50 rounded whitespace-pre-line mt-4">
             {suggestion}
           </div>
         )}
