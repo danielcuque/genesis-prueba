@@ -29,6 +29,7 @@ const ComboSuggestion: React.FC = () => {
   };
 
   const toggleRecording = () => {
+    console.log('Browser supports:', browserSupportsSpeechRecognition);
     if (!browserSupportsSpeechRecognition) {
       alert('Tu navegador no soporta reconocimiento de voz.');
       return;
@@ -36,8 +37,11 @@ const ComboSuggestion: React.FC = () => {
 
     if (listening) {
       SpeechRecognition.stopListening();
+      console.log('Transcript:', transcript);
       if (transcript.trim()) {
         sendVoiceToLLM(transcript.trim());
+      } else {
+        alert('No se reconoció texto. Intenta hablar más claramente.');
       }
     } else {
       resetTranscript();
