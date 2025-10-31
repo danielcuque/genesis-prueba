@@ -106,14 +106,14 @@ app.MapPost("/api/orders", async (Order order, AppDbContext db) =>
 });
 
 // LLM suggestion endpoint
-app.MapPost("/api/llm/suggest", async (HttpClient httpClient, int people) =>
+app.MapPost("/api/llm/suggest", async (HttpClient httpClient, SuggestRequest request) =>
 {
     var apiKey = Environment.GetEnvironmentVariable("OPENROUTER_API_KEY");
     if (string.IsNullOrEmpty(apiKey))
     {
         return "Configura la variable OPENROUTER_API_KEY para usar OpenRouter. Usa modelos gratuitos.";
     }
-    var prompt = $"Eres un experto en cocina guatemalteca. Sugiere un combo creativo y personalizado de tamales y bebidas para {people} personas. Opciones disponibles: Masa (maíz amarillo, maíz blanco, arroz), Relleno (recado rojo de cerdo, negro de pollo, chipilín vegetariano, mezcla chuchito), Envoltura (hoja de plátano, tusa de maíz), Picante (sin chile, suave, chapín), Tipo bebida (atol de elote, atole shuco, pinol, cacao batido), Endulzante (sin azúcar, panela, miel), Topping (ninguno, malvaviscos, canela, ralladura cacao). Devuelve una sugerencia atractiva, apetecida en español con ejemplos específicos de personalizaciones y precio aproximado.";
+    var prompt = $"Eres un experto en cocina guatemalteca. Sugiere un combo creativo y personalizado de tamales y bebidas para {request.People} personas. Opciones disponibles: Masa (maíz amarillo, maíz blanco, arroz), Relleno (recado rojo de cerdo, negro de pollo, chipilín vegetariano, mezcla chuchito), Envoltura (hoja de plátano, tusa de maíz), Picante (sin chile, suave, chapín), Tipo bebida (atol de elote, atole shuco, pinol, cacao batido), Endulzante (sin azúcar, panela, miel), Topping (ninguno, malvaviscos, canela, ralladura cacao). Devuelve una sugerencia atractiva, apetecida en español con ejemplos específicos de personalizaciones y precio aproximado.";
     var payload = new
     {
         model = "microsoft/wizardlm-2-8x22b",

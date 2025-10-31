@@ -1,0 +1,18 @@
+namespace Backend.Models;
+
+public record SuggestRequest(int People);
+
+public class OpenRouterResponse
+{
+    public Choice[] choices { get; set; }
+}
+
+public class Choice
+{
+    public Message message { get; set; }
+}
+
+public class Message
+{
+    public string content { get; set; }
+}

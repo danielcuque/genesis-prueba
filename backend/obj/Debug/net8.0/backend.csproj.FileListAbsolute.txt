@@ -156,3 +156,4 @@ C:\Users\danie\OneDrive\Desktop\prueba\backend\obj\Debug\net8.0\refint\backend.d
 C:\Users\danie\OneDrive\Desktop\prueba\backend\obj\Debug\net8.0\backend.pdb
 C:\Users\danie\OneDrive\Desktop\prueba\backend\obj\Debug\net8.0\backend.genruntimeconfig.cache
 C:\Users\danie\OneDrive\Desktop\prueba\backend\obj\Debug\net8.0\ref\backend.dll
+C:\Users\danie\OneDrive\Desktop\prueba\backend\obj\Debug\net8.0\backend.sourcelink.json
