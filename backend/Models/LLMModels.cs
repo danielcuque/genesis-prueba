@@ -2,6 +2,8 @@ namespace Backend.Models;
 
 public record SuggestRequest(int People);
 
+public record VoiceRequest(string VoiceText);
+
 public class OpenRouterResponse
 {
     public Choice[] choices { get; set; }

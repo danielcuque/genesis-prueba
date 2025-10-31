@@ -174,6 +174,40 @@ app.MapPost("/api/llm/analyze-sales", async (HttpClient httpClient, List<Order> 
     }
 });
 
+// LLM voice suggestion endpoint
+app.MapPost("/api/llm/voice-suggest", async (HttpClient httpClient, VoiceRequest request) =>
+{
+    var apiKey = Environment.GetEnvironmentVariable("OPENROUTER_API_KEY");
+    if (string.IsNullOrEmpty(apiKey))
+    {
+        return "Configura la variable OPENROUTER_API_KEY para usar OpenRouter. Usa modelos gratuitos.";
+    }
+    var prompt = $"Basado en esta solicitud de voz del cliente: '{request.VoiceText}', sugiere un combo personalizado de tamales y bebidas de La Cazuela Chapina. Interpreta la solicitud y proporciona una sugerencia atractiva en español con personalizaciones específicas y precio aproximado.";
+    var payload = new
+    {
+        model = "microsoft/wizardlm-2-8x22b",
+        messages = new[] { new { role = "user", content = prompt } },
+        max_tokens = 500,
+        temperature = 0.7
+    };
+    var jsonString = JsonSerializer.Serialize(payload);
+    var content = new StringContent(jsonString, Encoding.UTF8, "application/json");
+    var httpRequest = new HttpRequestMessage(HttpMethod.Post, "https://openrouter.ai/api/v1/chat/completions");
+    httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+    httpRequest.Content = content;
+    var response = await httpClient.SendAsync(httpRequest);
+    if (response.IsSuccessStatusCode)
+    {
+        var result = await response.Content.ReadFromJsonAsync<JsonElement>();
+        return result.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString() ?? "No se generó sugerencia.";
+    }
+    else
+    {
+        var error = await response.Content.ReadAsStringAsync();
+        return $"Error de OpenRouter: {error}";
+    }
+});
+
 // Migrate and seed database
 using (var scope = app.Services.CreateScope())
 {
