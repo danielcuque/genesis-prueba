@@ -16,7 +16,7 @@
       "applicationUrl": "http://localhost:5053",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "OPENROUTER_API_KEY": "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"
+        "OPENROUTER_API_KEY": ""
       }
     },
     "https": {
@@ -26,7 +26,7 @@
       "applicationUrl": "https://localhost:7205;http://localhost:5053",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "OPENROUTER_API_KEY": "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"
+        "OPENROUTER_API_KEY": ""
       }
     },
     "IIS Express": {

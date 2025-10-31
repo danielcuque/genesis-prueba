@@ -3,7 +3,7 @@ import { useCart } from '../context/CartContext';
 import { useNavigate } from 'react-router-dom';
 
 const Checkout: React.FC = () => {
-    const { items, total } = useCart();
+    const { items, total, clearCart } = useCart();
     const navigate = useNavigate();
     const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5053';
 
@@ -39,7 +39,7 @@ const Checkout: React.FC = () => {
             });
             if (res.ok) {
                 alert('Pedido realizado con éxito!');
-                // Clear cart somehow, but for now, redirect to home.
+                clearCart();
                 navigate('/');
             } else {
                 alert('Error al procesar el pedido.');
