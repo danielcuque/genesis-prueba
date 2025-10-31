@@ -6,6 +6,7 @@ import { Input } from './ui/input';
 const ComboSuggestion: React.FC = () => {
   const [people, setPeople] = useState(10);
   const [suggestion, setSuggestion] = useState('');
+  const [isListening, setIsListening] = useState(false);
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5053';
 
   const handleGenerate = async () => {
@@ -16,6 +17,20 @@ const ComboSuggestion: React.FC = () => {
     });
     const data = await res.text();
     setSuggestion(data);
+  };
+
+  const startListening = () => {
+    const recognition = new (window as any).webkitSpeechRecognition();
+    recognition.lang = 'es-ES';
+    recognition.onstart = () => setIsListening(true);
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      const number = parseInt(transcript.replace(/\D/g, ''));
+      if (!isNaN(number) && number > 0) setPeople(number);
+      setIsListening(false);
+    };
+    recognition.onend = () => setIsListening(false);
+    recognition.start();
   };
 
   return (
@@ -34,6 +49,9 @@ const ComboSuggestion: React.FC = () => {
             min="1"
             className="w-32"
           />
+          <Button onClick={startListening} variant="outline" disabled={isListening}>
+            {isListening ? 'Escuchando...' : '🎤 Voz'}
+          </Button>
           <Button onClick={handleGenerate}>Generar Sugerencia</Button>
         </div>
         {suggestion && (

@@ -25,6 +25,7 @@ const AdminDashboard: React.FC = () => {
     const [totalOrders, setTotalOrders] = useState(0);
     const [people, setPeople] = useState(10);
     const [suggestion, setSuggestion] = useState('');
+    const [salesAnalysis, setSalesAnalysis] = useState('');
     const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5053';
 
     useEffect(() => {
@@ -41,6 +42,12 @@ const AdminDashboard: React.FC = () => {
         const res = await fetch(`${API_BASE}/api/llm/suggest`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({People: people}) });
         const data = await res.text();
         setSuggestion(data);
+    };
+
+    const handleAnalyzeSales = async () => {
+        const res = await fetch(`${API_BASE}/api/llm/analyze-sales`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(orders) });
+        const data = await res.text();
+        setSalesAnalysis(data);
     };
 
     return (
@@ -85,11 +92,10 @@ const AdminDashboard: React.FC = () => {
                     ))}
                 </tbody>
             </table>
-            <h2 className="text-xl font-bold mb-4 mt-6">Sugerencias IA</h2>
-            <div className="p-4 border rounded bg-gray-50">
-                <input type="number" value={people} onChange={e => setPeople(Number(e.target.value))} placeholder="Número de personas" className="p-2 border rounded mr-2" min="1" />
-                <button onClick={handleGenerate} className="bg-purple-500 text-white p-2 rounded hover:bg-purple-600">Generar Sugerencia</button>
-                <p className="mt-4 whitespace-pre-line">{suggestion || 'Genera una sugerencia basada en OpenRouter LLM.'}</p>
+            <h2 className="text-xl font-bold mb-4 mt-6">Análisis de Ventas con IA</h2>
+            <div className="p-4 border rounded bg-blue-50 mb-6">
+                <button onClick={handleAnalyzeSales} className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Analizar Ventas</button>
+                <p className="mt-4 whitespace-pre-line">{salesAnalysis || 'Genera un análisis de ventas basado en métricas.'}</p>
             </div>
         </div>
     );

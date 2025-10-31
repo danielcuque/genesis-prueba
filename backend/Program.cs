@@ -139,6 +139,41 @@ app.MapPost("/api/llm/suggest", async (HttpClient httpClient, SuggestRequest req
     }
 });
 
+// LLM sales analysis endpoint
+app.MapPost("/api/llm/analyze-sales", async (HttpClient httpClient, List<Order> orders) =>
+{
+    var apiKey = Environment.GetEnvironmentVariable("OPENROUTER_API_KEY");
+    if (string.IsNullOrEmpty(apiKey))
+    {
+        return "Configura la variable OPENROUTER_API_KEY para usar OpenRouter. Usa modelos gratuitos.";
+    }
+    var salesData = JsonSerializer.Serialize(orders);
+    var prompt = $"Analiza los siguientes datos de ventas de La Cazuela Chapina y proporciona un análisis detallado en español: tendencias, productos más vendidos, patrones de personalización, recomendaciones para mejorar ventas. Datos: {salesData}";
+    var payload = new
+    {
+        model = "microsoft/wizardlm-2-8x22b",
+        messages = new[] { new { role = "user", content = prompt } },
+        max_tokens = 600,
+        temperature = 0.5
+    };
+    var jsonString = JsonSerializer.Serialize(payload);
+    var content = new StringContent(jsonString, Encoding.UTF8, "application/json");
+    var httpRequest = new HttpRequestMessage(HttpMethod.Post, "https://openrouter.ai/api/v1/chat/completions");
+    httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+    httpRequest.Content = content;
+    var response = await httpClient.SendAsync(httpRequest);
+    if (response.IsSuccessStatusCode)
+    {
+        var result = await response.Content.ReadFromJsonAsync<JsonElement>();
+        return result.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString() ?? "No se generó análisis.";
+    }
+    else
+    {
+        var error = await response.Content.ReadAsStringAsync();
+        return $"Error de OpenRouter: {error}";
+    }
+});
+
 // Migrate and seed database
 using (var scope = app.Services.CreateScope())
 {
@@ -163,9 +198,9 @@ using (var scope = app.Services.CreateScope())
 
     if (!db.Products.Any())
     {
-        db.Products.Add(new Product { Name = "Tamale", Description = "Personalizable", Price = 15.00M, Category = "tamale", IsVegetarian = false });
-        db.Products.Add(new Product { Name = "6 Tamales", Description = "Media docena personalizable", Price = 85.00M, Category = "tamale", IsVegetarian = false });
-        db.Products.Add(new Product { Name = "12 Tamales", Description = "Docena personalizable", Price = 160.00M, Category = "tamale", IsVegetarian = false });
+        db.Products.Add(new Product { Name = "Tamales", Description = "Personalizable", Price = 15.00M, Category = "tamales", IsVegetarian = false });
+        db.Products.Add(new Product { Name = "6 Tamales", Description = "Media docena personalizable", Price = 85.00M, Category = "tamales", IsVegetarian = false });
+        db.Products.Add(new Product { Name = "12 Tamales", Description = "Docena personalizable", Price = 160.00M, Category = "tamales", IsVegetarian = false });
         db.Products.Add(new Product { Name = "Bebida", Description = "Personalizable", Price = 10.00M, Category = "bebida", IsVegetarian = true });
         db.SaveChanges();
     }
