@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -6,81 +7,61 @@ import { Input } from './ui/input';
 const ComboSuggestion: React.FC = () => {
   const [people, setPeople] = useState(10);
   const [suggestion, setSuggestion] = useState('');
-  const [isRecording, setIsRecording] = useState(false);
-  const [transcript, setTranscript] = useState('');
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5053';
 
-  const handleGenerate = async () => {
-    const res = await fetch(`${API_BASE}/api/llm/suggest`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ People: people })
-    });
-    const data = await res.text();
-    setSuggestion(data);
-  };
+  const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
 
-  const toggleRecording = () => {
-    if (isRecording) {
-      // Detener grabación
-      setIsRecording(false);
-      if (transcript) {
-        sendVoiceToLLM(transcript);
-      }
-    } else {
-      // Iniciar grabación
-      startRecording();
+  const handleGenerate = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/llm/suggest`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ People: people })
+      });
+
+      if (!res.ok) throw new Error('Error al generar sugerencia');
+      const data = await res.text();
+      setSuggestion(data);
+    } catch (error) {
+      console.error(error);
+      alert('Ocurrió un error al generar la sugerencia.');
     }
   };
 
-  const startRecording = () => {
-    if (!(window as any).webkitSpeechRecognition) {
+  const toggleRecording = () => {
+    if (!browserSupportsSpeechRecognition) {
       alert('Tu navegador no soporta reconocimiento de voz.');
       return;
     }
 
-    const recognition = new (window as any).webkitSpeechRecognition();
-    recognition.lang = 'es-ES';
-    recognition.continuous = false;
-    recognition.interimResults = false;
-
-    recognition.onstart = () => {
-      setIsRecording(true);
-      setTranscript('');
-    };
-
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setTranscript(transcript);
-    };
-
-    recognition.onend = () => {
-      setIsRecording(false);
-    };
-
-    recognition.onerror = (event: any) => {
-      console.error('Error de reconocimiento:', event.error);
-      setIsRecording(false);
-      alert('Error en reconocimiento de voz: ' + event.error);
-    };
-
-    try {
-      recognition.start();
-    } catch (error) {
-      console.error('Error al iniciar reconocimiento:', error);
-      alert('No se pudo iniciar el reconocimiento de voz.');
+    if (listening) {
+      SpeechRecognition.stopListening();
+      if (transcript.trim()) {
+        sendVoiceToLLM(transcript.trim());
+      }
+    } else {
+      resetTranscript();
+      SpeechRecognition.startListening({ continuous: false, language: 'es-ES' });
     }
   };
 
   const sendVoiceToLLM = async (voiceText: string) => {
-    const res = await fetch(`${API_BASE}/api/llm/voice-suggest`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ VoiceText: voiceText })
-    });
-    const data = await res.text();
-    setSuggestion(data);
-    setTranscript('');
+    try {
+      const res = await fetch(`${API_BASE}/api/llm/voice-suggest`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ VoiceText: voiceText })
+      });
+
+      if (!res.ok) throw new Error('Error en voice-suggest');
+      const data = await res.text();
+      setSuggestion(data);
+    } catch (error) {
+      console.error(error);
+      alert('Error al enviar la voz al servidor.');
+    } finally {
+      resetTranscript();
+    }
   };
 
   return (
@@ -103,27 +84,40 @@ const ComboSuggestion: React.FC = () => {
             className="w-32"
           />
 
-          {/* Botón de grabar estilo ChatGPT */}
+          {/* Botón de grabar con animación tipo ChatGPT */}
           <Button
             onClick={toggleRecording}
-            className={`transition-all duration-300 flex items-center gap-2 ${
-              isRecording
+            className={`transition-all duration-300 flex items-center gap-3 ${
+              listening
                 ? 'bg-red-600 hover:bg-red-700 text-white'
                 : 'bg-gray-200 hover:bg-gray-300 text-black'
             }`}
           >
-            <span
-              className={`h-3 w-3 rounded-full ${
-                isRecording ? 'bg-red-500 animate-pulse' : 'bg-gray-400'
-              }`}
-            />
-            {isRecording ? 'Detener Grabación' : 'Grabar Voz'}
+            {listening ? (
+              <div className="flex items-center gap-2">
+                {/* Ondas animadas */}
+                <div className="flex items-end gap-[3px]">
+                  <span className="w-[3px] h-2 bg-white rounded animate-wave1"></span>
+                  <span className="w-[3px] h-3 bg-white rounded animate-wave2"></span>
+                  <span className="w-[3px] h-4 bg-white rounded animate-wave3"></span>
+                  <span className="w-[3px] h-3 bg-white rounded animate-wave2"></span>
+                  <span className="w-[3px] h-2 bg-white rounded animate-wave1"></span>
+                </div>
+                <span>Detener</span>
+              </div>
+            ) : (
+              <>
+                🎤 <span>Grabar Voz</span>
+              </>
+            )}
           </Button>
 
           <Button onClick={handleGenerate}>Generar Sugerencia</Button>
         </div>
 
-        {transcript && <p className="text-sm text-gray-600">🗣️ Transcripción: {transcript}</p>}
+        {transcript && (
+          <p className="text-sm text-gray-600">🗣️ Transcripción: {transcript}</p>
+        )}
 
         {suggestion && (
           <div className="p-4 bg-gray-50 rounded whitespace-pre-line mt-4">

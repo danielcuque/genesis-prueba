@@ -15,8 +15,6 @@ function App() {
         <Routes>
           <Route path="/" element={
             <div className="p-4">
-              <h1 className="text-3xl font-bold mb-6">Bienvenido a La Cazuela Chapina</h1>
-              <p className="mb-8">Descubre nuestros tamales tradicionales y bebidas artesanales, personalizados según tus preferencias.</p>
               <ComboSuggestion />
             </div>
           } />
