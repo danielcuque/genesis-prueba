@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -9,14 +9,20 @@ const ComboSuggestion: React.FC = () => {
   const [suggestion, setSuggestion] = useState('');
   const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5053';
 
-  const { transcript, listening, resetTranscript, browserSupportsSpeechRecognition } = useSpeechRecognition();
+  const {
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition,
+  } = useSpeechRecognition();
 
+ 
   const handleGenerate = async () => {
     try {
       const res = await fetch(`${API_BASE}/api/llm/suggest`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ People: people })
+        body: JSON.stringify({ People: people }),
       });
 
       if (!res.ok) throw new Error('Error al generar sugerencia');
@@ -28,6 +34,7 @@ const ComboSuggestion: React.FC = () => {
     }
   };
 
+ 
   const toggleRecording = () => {
     console.log('Browser supports:', browserSupportsSpeechRecognition);
     if (!browserSupportsSpeechRecognition) {
@@ -37,24 +44,20 @@ const ComboSuggestion: React.FC = () => {
 
     if (listening) {
       SpeechRecognition.stopListening();
-      console.log('Transcript:', transcript);
-      if (transcript.trim()) {
-        sendVoiceToLLM(transcript.trim());
-      } else {
-        alert('No se reconoció texto. Intenta hablar más claramente.');
-      }
     } else {
       resetTranscript();
       SpeechRecognition.startListening({ continuous: false, language: 'es-ES' });
     }
   };
 
+ 
   const sendVoiceToLLM = async (voiceText: string) => {
     try {
+      console.log('Enviando a LLM:', voiceText);
       const res = await fetch(`${API_BASE}/api/llm/voice-suggest`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ VoiceText: voiceText })
+        body: JSON.stringify({ VoiceText: voiceText }),
       });
 
       if (!res.ok) throw new Error('Error en voice-suggest');
@@ -67,6 +70,13 @@ const ComboSuggestion: React.FC = () => {
       resetTranscript();
     }
   };
+
+  useEffect(() => {
+    if (!listening && transcript.trim()) {
+      console.log('Reconocimiento finalizado, transcript:', transcript);
+      sendVoiceToLLM(transcript.trim());
+    }
+  }, [listening]); 
 
   return (
     <Card className="max-w-2xl mx-auto mt-8">
@@ -82,7 +92,7 @@ const ComboSuggestion: React.FC = () => {
           <Input
             type="number"
             value={people}
-            onChange={e => setPeople(Number(e.target.value))}
+            onChange={(e) => setPeople(Number(e.target.value))}
             placeholder="Número de personas"
             min="1"
             className="w-32"
@@ -99,7 +109,6 @@ const ComboSuggestion: React.FC = () => {
           >
             {listening ? (
               <div className="flex items-center gap-2">
-                {/* Ondas animadas */}
                 <div className="flex items-end gap-[3px]">
                   <span className="w-[3px] h-2 bg-white rounded animate-wave1"></span>
                   <span className="w-[3px] h-3 bg-white rounded animate-wave2"></span>

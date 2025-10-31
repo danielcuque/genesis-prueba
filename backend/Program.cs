@@ -182,7 +182,7 @@ app.MapPost("/api/llm/voice-suggest", async (HttpClient httpClient, VoiceRequest
     {
         return "Configura la variable OPENROUTER_API_KEY para usar OpenRouter. Usa modelos gratuitos.";
     }
-    var prompt = $"Basado en esta solicitud de voz del cliente: '{request.VoiceText}', sugiere un combo personalizado de tamales y bebidas de La Cazuela Chapina. Interpreta la solicitud y proporciona una sugerencia atractiva en español con personalizaciones específicas y precio aproximado.";
+    var prompt = $"Basado en esta solicitud de voz del cliente: '{request.VoiceText}', responde, si no tiene algo que ver con comida, responde que solo puedes decir algo de comida.";
     var payload = new
     {
         model = "microsoft/wizardlm-2-8x22b",
